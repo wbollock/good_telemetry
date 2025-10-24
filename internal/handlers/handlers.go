@@ -4,6 +4,7 @@
 package handlers
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -28,34 +29,45 @@ func (h *Handler) Index(c *gin.Context) {
 }
 
 func (h *Handler) Evaluate(c *gin.Context) {
+	log.Println("[Evaluate] Received evaluation request")
+
 	var req struct {
 		Metrics string `form:"metrics" binding:"required"`
 	}
 
 	if err := c.ShouldBind(&req); err != nil {
+		log.Printf("[Evaluate] Error binding request: %v", err)
 		c.HTML(http.StatusBadRequest, "error.html", gin.H{
 			"error": "Please provide metrics to evaluate",
 		})
 		return
 	}
 
+	log.Printf("[Evaluate] Input metrics:\n%s", req.Metrics)
+
 	// Parse metrics
 	parsed, err := metrics.Parse(req.Metrics)
 	if err != nil {
+		log.Printf("[Evaluate] Error parsing metrics: %v", err)
 		c.HTML(http.StatusBadRequest, "error.html", gin.H{
 			"error": err.Error(),
 		})
 		return
 	}
 
+	log.Printf("[Evaluate] Parsed %d metric(s), sending to LLM...", len(parsed.Metrics))
+
 	// Evaluate with LLM
 	evaluation, err := h.llmClient.Evaluate(parsed)
 	if err != nil {
+		log.Printf("[Evaluate] Error calling LLM: %v", err)
 		c.HTML(http.StatusInternalServerError, "error.html", gin.H{
 			"error": "Failed to evaluate metrics: " + err.Error(),
 		})
 		return
 	}
+
+	log.Printf("[Evaluate] LLM evaluation complete. Verdict: %s", evaluation.Verdict)
 
 	// Return evaluation result (htmx will swap this into the page)
 	c.HTML(http.StatusOK, "result.html", gin.H{

@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -54,8 +55,11 @@ func NewClient(baseURL, model string) *Client {
 }
 
 func (c *Client) Evaluate(parsed *metrics.ParsedMetrics) (*Evaluation, error) {
+	log.Printf("[LLM] Starting evaluation with model %s at %s", c.model, c.baseURL)
+
 	// Build the prompt
 	prompt := c.buildPrompt(parsed)
+	log.Printf("[LLM] Built prompt (%d chars):\n%s\n---END PROMPT---", len(prompt), prompt)
 
 	// Call Ollama API
 	reqBody := ollamaRequest{
@@ -66,30 +70,45 @@ func (c *Client) Evaluate(parsed *metrics.ParsedMetrics) (*Evaluation, error) {
 
 	jsonData, err := json.Marshal(reqBody)
 	if err != nil {
+		log.Printf("[LLM] Error marshaling request: %v", err)
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
+	apiURL := c.baseURL + "/api/generate"
+	log.Printf("[LLM] Calling Ollama API: POST %s", apiURL)
+
+	start := time.Now()
 	resp, err := c.httpClient.Post(
-		c.baseURL+"/api/generate",
+		apiURL,
 		"application/json",
 		bytes.NewBuffer(jsonData),
 	)
 	if err != nil {
+		log.Printf("[LLM] Error calling Ollama API: %v", err)
 		return nil, fmt.Errorf("failed to call Ollama API: %w", err)
 	}
 	defer resp.Body.Close()
 
+	log.Printf("[LLM] Got response status: %d (took %v)", resp.StatusCode, time.Since(start))
+
 	if resp.StatusCode != http.StatusOK {
+		log.Printf("[LLM] Non-OK status code: %d", resp.StatusCode)
 		return nil, fmt.Errorf("Ollama API returned status %d", resp.StatusCode)
 	}
 
 	var ollamaResp ollamaResponse
 	if err := json.NewDecoder(resp.Body).Decode(&ollamaResp); err != nil {
+		log.Printf("[LLM] Error decoding response: %v", err)
 		return nil, fmt.Errorf("failed to decode response: %w", err)
 	}
 
+	log.Printf("[LLM] Received response (%d chars):\n%s\n---END RESPONSE---",
+		len(ollamaResp.Response), ollamaResp.Response)
+
 	// Parse the LLM response into structured evaluation
 	evaluation := c.parseResponse(ollamaResp.Response, parsed.CardinalityAnalysis)
+	log.Printf("[LLM] Parsed evaluation: Verdict=%s, Issues=%d, Recommendations=%d",
+		evaluation.Verdict, len(evaluation.Issues), len(evaluation.Recommendations))
 
 	return evaluation, nil
 }
