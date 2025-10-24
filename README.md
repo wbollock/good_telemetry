@@ -62,12 +62,18 @@ export OLLAMA_MODEL=llama3.2:3b
 
 4. **Test it**:
    - Open `http://localhost:8080`
-   - Paste a metric:
+   - Try a high-cardinality metric:
    ```
    api_response_time{user_id="12345", endpoint="/profile"} 0.234
    ```
    - Click "Evaluate Metrics"
    - Watch the LLM identify the high-cardinality `user_id` label
+
+   - Or try a catastrophic example:
+   ```
+   volume_attachment{vol="vol-abc123", inode="1048576", timestamp="1729783200", cluster="prod-east"} 1
+   ```
+   - See it calculate **2.18 billion series = 6.5TB RAM** from combining multiple unbounded labels
 
 ### Setup for Remote GPU Server
 
