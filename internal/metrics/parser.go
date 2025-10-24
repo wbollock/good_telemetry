@@ -51,8 +51,14 @@ func Parse(input string) (*ParsedMetrics, error) {
 		return nil, fmt.Errorf("no valid metrics found")
 	}
 
+	// Extract labels for cardinality analysis
+	var allLabels []map[string]string
+	for _, m := range metrics {
+		allLabels = append(allLabels, m.Labels)
+	}
+
 	// Calculate cardinality
-	analysis := cardinality.Analyze(metrics)
+	analysis := cardinality.Analyze(allLabels)
 
 	return &ParsedMetrics{
 		Metrics:             metrics,

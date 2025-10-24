@@ -41,34 +41,20 @@ const (
 )
 
 var highCardinalityPatterns = map[string]*regexp.Regexp{
-	"user_id":       regexp.MustCompile(`(?i)user_?id|userid|user_?name|username`),
-	"email":         regexp.MustCompile(`(?i)email|e_?mail`),
-	"ip_address":    regexp.MustCompile(`(?i)ip_?addr|ip_?address|client_?ip`),
-	"timestamp":     regexp.MustCompile(`(?i)timestamp|ts|time|date`),
-	"uuid":          regexp.MustCompile(`(?i)uuid|guid|id`),
-	"session":       regexp.MustCompile(`(?i)session_?id|session`),
-	"trace_id":      regexp.MustCompile(`(?i)trace_?id|span_?id|request_?id`),
-	"url_path":      regexp.MustCompile(`(?i)path|url|uri|endpoint`),
+	"user_id":       regexp.MustCompile(`(?i)^(user_?id|userid|user_?name|username)$`),
+	"email":         regexp.MustCompile(`(?i)^(email|e_?mail)$`),
+	"ip_address":    regexp.MustCompile(`(?i)^(ip_?addr|ip_?address|client_?ip)$`),
+	"timestamp":     regexp.MustCompile(`(?i)^(timestamp|ts|epoch|unix_?time|created_?at|updated_?at)$`),
+	"uuid":          regexp.MustCompile(`(?i)^(uuid|guid)$`),
+	"session":       regexp.MustCompile(`(?i)^(session_?id|session)$`),
+	"trace_id":      regexp.MustCompile(`(?i)^(trace_?id|span_?id|request_?id)$`),
+	"url_path":      regexp.MustCompile(`(?i)^(path|url|uri)$`),
+	"inode":         regexp.MustCompile(`(?i)^(inode|file_?id|fd)$`),
+	"volume":        regexp.MustCompile(`(?i)^(vol|volume|volume_?id|disk|disk_?id)$`),
 }
 
-func Analyze(metrics interface{}) *Analysis {
-	// Type assertion to handle metrics from parser
-	type metricWithLabels interface {
-		GetLabels() map[string]string
-	}
-
-	var allLabels []map[string]string
-
-	// Extract labels based on type
-	switch m := metrics.(type) {
-	case []interface{}:
-		for _, metric := range m {
-			if ml, ok := metric.(metricWithLabels); ok {
-				allLabels = append(allLabels, ml.GetLabels())
-			}
-		}
-	default:
-		// For now, return basic analysis
+func Analyze(allLabels []map[string]string) *Analysis {
+	if len(allLabels) == 0 {
 		return &Analysis{
 			EstimatedSeries:     1,
 			MemoryEstimateBytes: memoryPerSeriesBytes,
