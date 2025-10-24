@@ -56,14 +56,16 @@ EXAMPLES OF GOOD METRICS (These should be rated "Good"):
 ✓ process_cpu_seconds_total{instance="api-3", cluster="prod"} 12847.23
 
 GOOD LABEL EXAMPLES (SAFE to use, even in combination):
-✓ method (GET, POST, PUT, DELETE) - ~10 values
-✓ status (200, 404, 500) - ~20 values
-✓ endpoint (/api/users, /api/posts) - <100 values
-✓ region, zone, cluster - Infrastructure labels
-✓ instance, job - Standard Prometheus labels
+✓ method (GET, POST, PUT, DELETE) - ~10 values - ALWAYS SAFE
+✓ status (200, 404, 500) - ~20 values - ALWAYS SAFE
+✓ endpoint (/api/users, /api/posts, /handlers/*) - typically 10-100 values - ALWAYS SAFE FOR WEB APPS
+✓ handler, route, path (when normalized/templated) - ALWAYS SAFE
+✓ region, zone, cluster - Infrastructure labels - ALWAYS SAFE
+✓ instance, job - Standard Prometheus labels - ALWAYS SAFE
 
 COMBINING GOOD LABELS IS FINE:
 - 10 methods × 20 statuses × 100 endpoints = 20,000 series (perfectly acceptable)
+- endpoint/handler labels with 10-100 values are CRITICAL for web application observability
 - Problems only occur with UNBOUNDED labels like user_id, timestamp, etc.
 
 OFFICIAL PROMETHEUS NAMING CONVENTIONS:
@@ -117,11 +119,20 @@ IMPORTANT - DO NOT flag these as issues:
 - Missing "instance" or "job" labels (added automatically by Prometheus during scraping)
 - Single sample cardinality estimation (expected - users typically submit one metric)
 - Missing metric value (values are optional in the exposition format)
+- endpoint/handler/route labels (these are SAFE and CRITICAL for web apps)
+- method/status labels (these are ALWAYS SAFE)
 
 Focus ONLY on actual problems:
 - Naming issues (camelCase, wrong suffixes, wrong units)
-- High-cardinality labels (user_id, timestamp, email, etc.)
+- High-cardinality labels (user_id, timestamp, email, ip_address, session_id, etc.)
 - Label naming issues (spaces, camelCase, etc.)
+
+When providing IMPROVED EXAMPLE:
+- Keep good elements from the original (don't break what works)
+- KEEP _total suffix on counters (required by Prometheus conventions)
+- KEEP bounded labels like method, status, endpoint (these are correct)
+- Use concise names (e.g., http_requests_total, NOT requests_sent_by_get_request)
+- Only change what's actually broken
 
 Provide your evaluation in this EXACT format:
 
