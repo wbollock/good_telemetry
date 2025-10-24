@@ -34,24 +34,33 @@ The fastest way to test the application:
 
 1. **Install and start Ollama**:
 ```bash
-# Install Ollama
+# Install Ollama (it usually starts automatically as a service)
 curl https://ollama.ai/install.sh | sh
 
-# Pull a small model for testing (llama3.2 is ~2GB)
-ollama pull llama3.2:3b
+# Check if Ollama is already running
+curl http://localhost:11434/api/tags
 
-# Start Ollama (it runs on localhost:11434 by default)
+# If you see JSON output, it's running! If not, start it:
 ollama serve
 ```
 
-2. **In a new terminal, build and run the web server**:
+2. **Pull a small model for testing**:
+```bash
+# llama3.2:3b is ~2GB and fast for testing
+ollama pull llama3.2:3b
+
+# Verify the model is available
+ollama list
+```
+
+3. **Build and run the web server**:
 ```bash
 go build -o bin/web ./cmd/web
 export OLLAMA_MODEL=llama3.2:3b
 ./bin/web
 ```
 
-3. **Test it**:
+4. **Test it**:
    - Open `http://localhost:8080`
    - Paste a metric:
    ```
