@@ -24,10 +24,10 @@ type ParsedMetrics struct {
 }
 
 var (
-	// Matches: metric_name{label1="value1",label2="value2"} value
-	metricRegex = regexp.MustCompile(`^([a-zA-Z_:][a-zA-Z0-9_:]*)\{([^}]*)\}\s+([0-9.eE+-]+)`)
-	// Matches: metric_name value (no labels)
-	simpleMetricRegex = regexp.MustCompile(`^([a-zA-Z_:][a-zA-Z0-9_:]*)\s+([0-9.eE+-]+)`)
+	// Matches: metric_name{label1="value1",label2="value2"} value (with optional value)
+	metricWithLabelsRegex = regexp.MustCompile(`^([a-zA-Z_:][a-zA-Z0-9_:]*)\{([^}]*)\}(?:\s+([0-9.eE+-]+))?`)
+	// Matches: metric_name value (no labels, with optional value)
+	simpleMetricRegex = regexp.MustCompile(`^([a-zA-Z_:][a-zA-Z0-9_:]*)(?:\s+([0-9.eE+-]+))?$`)
 )
 
 func Parse(input string) (*ParsedMetrics, error) {
@@ -68,26 +68,36 @@ func Parse(input string) (*ParsedMetrics, error) {
 
 func parseLine(line string) (Metric, error) {
 	// Try parsing with labels first
-	if matches := metricRegex.FindStringSubmatch(line); matches != nil {
+	if matches := metricWithLabelsRegex.FindStringSubmatch(line); matches != nil {
 		labels, err := parseLabels(matches[2])
 		if err != nil {
 			return Metric{}, err
 		}
 
+		value := "0"
+		if len(matches) > 3 && matches[3] != "" {
+			value = matches[3]
+		}
+
 		return Metric{
 			Name:   matches[1],
 			Labels: labels,
-			Value:  matches[3],
+			Value:  value,
 			Raw:    line,
 		}, nil
 	}
 
 	// Try simple format without labels
 	if matches := simpleMetricRegex.FindStringSubmatch(line); matches != nil {
+		value := "0"
+		if len(matches) > 2 && matches[2] != "" {
+			value = matches[2]
+		}
+
 		return Metric{
 			Name:   matches[1],
 			Labels: make(map[string]string),
-			Value:  matches[2],
+			Value:  value,
 			Raw:    line,
 		}, nil
 	}

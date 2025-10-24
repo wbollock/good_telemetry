@@ -112,6 +112,17 @@ OFFICIAL PROMETHEUS NAMING CONVENTIONS:
    - Using camelCase or UPPERCASE`
 
 const evaluationInstructions = `
+IMPORTANT - DO NOT flag these as issues:
+- Missing # TYPE or # HELP comments (not required for evaluation)
+- Missing "instance" or "job" labels (added automatically by Prometheus during scraping)
+- Single sample cardinality estimation (expected - users typically submit one metric)
+- Missing metric value (values are optional in the exposition format)
+
+Focus ONLY on actual problems:
+- Naming issues (camelCase, wrong suffixes, wrong units)
+- High-cardinality labels (user_id, timestamp, email, etc.)
+- Label naming issues (spaces, camelCase, etc.)
+
 Provide your evaluation in this EXACT format:
 
 VERDICT: [Good/Needs Improvement/Poor]
