@@ -107,8 +107,12 @@ button:disabled {
     border: 2px solid #3498db;
 }
 
-.htmx-request .loading-indicator {
-    display: flex;
+.loading-indicator.htmx-request {
+    display: flex !important;
+}
+
+form.htmx-request .loading-indicator {
+    display: flex !important;
 }
 
 .spinner {
