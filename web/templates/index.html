@@ -25,8 +25,15 @@
 <body>
     <div class="container">
         <header>
-            <h1>Good Telemetry</h1>
-            <p class="subtitle">Prometheus Metric Quality Evaluator</p>
+            <div class="header-content">
+                <div>
+                    <h1>Good Telemetry</h1>
+                    <p class="subtitle">Prometheus Metric Quality Evaluator</p>
+                </div>
+                <button id="dark-mode-toggle" class="theme-toggle" aria-label="Toggle dark mode">
+                    <span class="theme-icon">🌙</span>
+                </button>
+            </div>
         </header>
 
         <main>
@@ -78,5 +85,31 @@
             <p>Powered by Ollama | Focus: Naming, Labels, Cardinality, Structure</p>
         </footer>
     </div>
+
+    <script>
+        // Dark mode toggle
+        const darkModeToggle = document.getElementById('dark-mode-toggle');
+        const body = document.body;
+        const themeIcon = document.querySelector('.theme-icon');
+
+        // Check for saved theme preference or default to light mode
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        if (currentTheme === 'dark') {
+            body.classList.add('dark-mode');
+            themeIcon.textContent = '☀️';
+        }
+
+        darkModeToggle.addEventListener('click', () => {
+            body.classList.toggle('dark-mode');
+
+            if (body.classList.contains('dark-mode')) {
+                themeIcon.textContent = '☀️';
+                localStorage.setItem('theme', 'dark');
+            } else {
+                themeIcon.textContent = '🌙';
+                localStorage.setItem('theme', 'light');
+            }
+        });
+    </script>
 </body>
 </html>
