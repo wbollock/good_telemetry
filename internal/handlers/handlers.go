@@ -1,0 +1,130 @@
+// ABOUTME: HTTP handlers for Good Telemetry web routes
+// ABOUTME: Processes metric evaluation requests and serves UI responses
+
+package handlers
+
+import (
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+	"github.com/wbollock/good_telemetry/internal/llm"
+	"github.com/wbollock/good_telemetry/internal/metrics"
+)
+
+type Handler struct {
+	llmClient *llm.Client
+}
+
+func NewHandler(llmClient *llm.Client) *Handler {
+	return &Handler{
+		llmClient: llmClient,
+	}
+}
+
+func (h *Handler) Index(c *gin.Context) {
+	c.HTML(http.StatusOK, "index.html", gin.H{
+		"title": "Good Telemetry",
+	})
+}
+
+func (h *Handler) Evaluate(c *gin.Context) {
+	var req struct {
+		Metrics string `form:"metrics" binding:"required"`
+	}
+
+	if err := c.ShouldBind(&req); err != nil {
+		c.HTML(http.StatusBadRequest, "error.html", gin.H{
+			"error": "Please provide metrics to evaluate",
+		})
+		return
+	}
+
+	// Parse metrics
+	parsed, err := metrics.Parse(req.Metrics)
+	if err != nil {
+		c.HTML(http.StatusBadRequest, "error.html", gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	// Evaluate with LLM
+	evaluation, err := h.llmClient.Evaluate(parsed)
+	if err != nil {
+		c.HTML(http.StatusInternalServerError, "error.html", gin.H{
+			"error": "Failed to evaluate metrics: " + err.Error(),
+		})
+		return
+	}
+
+	// Return evaluation result (htmx will swap this into the page)
+	c.HTML(http.StatusOK, "result.html", gin.H{
+		"evaluation": evaluation,
+		"metrics":    parsed,
+	})
+}
+
+func (h *Handler) Examples(c *gin.Context) {
+	examples := getHardcodedExamples()
+	c.HTML(http.StatusOK, "examples.html", gin.H{
+		"examples": examples,
+	})
+}
+
+// Hardcoded showcase examples
+func getHardcodedExamples() []Example {
+	return []Example{
+		{
+			Metrics: `http_requests_total{method="GET", handler="/api/users", status="200"} 1027`,
+			Verdict: "Good",
+			Issues:  []string{},
+			Recommendations: []string{
+				"This is a well-structured counter metric",
+				"Uses appropriate _total suffix",
+				"Labels are low-cardinality and meaningful",
+			},
+			CardinalityEstimate: "Low (3 methods × ~10 handlers × 5 status codes = ~150 series)",
+			MemoryEstimate:      "~3KB RAM per series = ~450KB total",
+		},
+		{
+			Metrics: `api_response_time{user_id="12345", endpoint="/profile"} 0.234`,
+			Verdict: "Needs Improvement",
+			Issues: []string{
+				"user_id is unbounded high-cardinality label",
+				"Missing _seconds suffix for time measurement",
+				"Should be a histogram, not gauge",
+			},
+			Recommendations: []string{
+				"Remove user_id label - use it in logs instead",
+				"Rename to api_response_duration_seconds",
+				"Convert to histogram for percentile calculations",
+			},
+			CardinalityEstimate: "CRITICAL: Unbounded (1 series per user × endpoints = potentially millions)",
+			MemoryEstimate:      "Could easily exceed 10GB+ with 100k users",
+		},
+		{
+			Metrics: `cache_hit_ratio 0.87`,
+			Verdict: "Needs Improvement",
+			Issues: []string{
+				"Ratio should be calculated in queries, not stored as metric",
+				"Missing labels to identify which cache",
+			},
+			Recommendations: []string{
+				"Store cache_hits_total and cache_misses_total instead",
+				"Add cache_name label",
+				"Calculate ratio: cache_hits_total / (cache_hits_total + cache_misses_total)",
+			},
+			CardinalityEstimate: "N/A - antipattern",
+			MemoryEstimate:      "N/A",
+		},
+	}
+}
+
+type Example struct {
+	Metrics             string
+	Verdict             string
+	Issues              []string
+	Recommendations     []string
+	CardinalityEstimate string
+	MemoryEstimate      string
+}

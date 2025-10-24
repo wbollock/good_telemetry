@@ -1,0 +1,53 @@
+<div class="evaluation-result">
+    <div class="verdict verdict-{{ .evaluation.Verdict | lower }}">
+        <h3>Verdict: {{ .evaluation.Verdict }}</h3>
+    </div>
+
+    <div class="metric-display">
+        <h4>Analyzed Metric(s):</h4>
+        <pre>{{ range .metrics.Metrics }}{{ .Raw }}
+{{ end }}</pre>
+    </div>
+
+    {{ if .evaluation.CardinalityAnalysis }}
+    <div class="cardinality-section">
+        <h4>Cardinality Analysis</h4>
+        <p><strong>Level:</strong> {{ .evaluation.CardinalityAnalysis }}</p>
+        <p><strong>Memory Impact:</strong> {{ .evaluation.MemoryImpact }}</p>
+    </div>
+    {{ end }}
+
+    {{ if .evaluation.Issues }}
+    <div class="issues-section">
+        <h4>Issues Found:</h4>
+        <ul>
+        {{ range .evaluation.Issues }}
+            <li class="issue">{{ . }}</li>
+        {{ end }}
+        </ul>
+    </div>
+    {{ end }}
+
+    {{ if .evaluation.Recommendations }}
+    <div class="recommendations-section">
+        <h4>Recommendations:</h4>
+        <ul>
+        {{ range .evaluation.Recommendations }}
+            <li class="recommendation">{{ . }}</li>
+        {{ end }}
+        </ul>
+    </div>
+    {{ end }}
+
+    {{ if .evaluation.ImprovedExample }}
+    <div class="improved-section">
+        <h4>Improved Version:</h4>
+        <pre class="improved-code">{{ .evaluation.ImprovedExample }}</pre>
+    </div>
+    {{ end }}
+
+    <details class="raw-response">
+        <summary>View Full LLM Response</summary>
+        <pre>{{ .evaluation.RawResponse }}</pre>
+    </details>
+</div>

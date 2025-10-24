@@ -1,0 +1,40 @@
+<div class="examples-grid">
+    {{ range .examples }}
+    <div class="example-card verdict-{{ .Verdict | lower }}">
+        <div class="example-header">
+            <span class="example-verdict">{{ .Verdict }}</span>
+        </div>
+
+        <div class="example-metric">
+            <pre>{{ .Metrics }}</pre>
+        </div>
+
+        <div class="example-analysis">
+            <p><strong>Cardinality:</strong> {{ .CardinalityEstimate }}</p>
+            <p><strong>Memory:</strong> {{ .MemoryEstimate }}</p>
+        </div>
+
+        {{ if .Issues }}
+        <div class="example-issues">
+            <strong>Issues:</strong>
+            <ul>
+            {{ range .Issues }}
+                <li>{{ . }}</li>
+            {{ end }}
+            </ul>
+        </div>
+        {{ end }}
+
+        {{ if .Recommendations }}
+        <div class="example-recommendations">
+            <strong>Recommendations:</strong>
+            <ul>
+            {{ range .Recommendations }}
+                <li>{{ . }}</li>
+            {{ end }}
+            </ul>
+        </div>
+        {{ end }}
+    </div>
+    {{ end }}
+</div>

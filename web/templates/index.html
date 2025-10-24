@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ .title }}</title>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Good Telemetry</h1>
+            <p class="subtitle">Prometheus Metric Quality Evaluator</p>
+        </header>
+
+        <main>
+            <section class="input-section">
+                <h2>Evaluate Your Metrics</h2>
+                <p>Paste one or more Prometheus metrics below for LLM-powered analysis:</p>
+
+                <form hx-post="/evaluate"
+                      hx-target="#results"
+                      hx-indicator="#loading"
+                      hx-swap="innerHTML">
+                    <textarea
+                        name="metrics"
+                        id="metrics"
+                        rows="10"
+                        placeholder='http_requests_total{method="GET", status="200"} 1234'
+                        required></textarea>
+
+                    <button type="submit">Evaluate Metrics</button>
+                    <span id="loading" class="htmx-indicator">Analyzing...</span>
+                </form>
+
+                <div id="results" class="results-container">
+                    <!-- Results will be inserted here via HTMX -->
+                </div>
+            </section>
+
+            <section class="examples-section">
+                <h2>Example Evaluations</h2>
+                <p>See how different metrics are evaluated:</p>
+                <div hx-get="/examples"
+                     hx-trigger="load"
+                     hx-target="#examples-container">
+                    <div id="examples-container">
+                        Loading examples...
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>Powered by Ollama | Focus: Naming, Labels, Cardinality, Structure</p>
+        </footer>
+    </div>
+</body>
+</html>

@@ -1,29 +1,56 @@
 // ABOUTME: Web server for Good Telemetry - serves UI and handles metric evaluation requests
-// ABOUTME: Communicates with LLM backend for analysis and stores showcase examples
+// ABOUTME: Communicates with LLM backend for analysis and displays hardcoded showcase examples
 
 package main
 
 import (
-	"fmt"
 	"log"
-	"net/http"
+	"os"
+
+	"github.com/gin-gonic/gin"
+	"github.com/wbollock/good_telemetry/internal/handlers"
+	"github.com/wbollock/good_telemetry/internal/llm"
 )
 
 func main() {
-	// TODO: Initialize database
-	// TODO: Initialize LLM client
-	// TODO: Set up routes
-	// TODO: Load configuration
+	// Load configuration from environment
+	llmURL := os.Getenv("LLM_BACKEND_URL")
+	if llmURL == "" {
+		llmURL = "http://localhost:11434" // Default Ollama local URL
+	}
 
-	http.HandleFunc("/", handleIndex)
+	model := os.Getenv("OLLAMA_MODEL")
+	if model == "" {
+		model = "llama2"
+	}
 
-	port := ":8080"
-	log.Printf("Starting Good Telemetry web server on %s", port)
-	if err := http.ListenAndServe(port, nil); err != nil {
+	port := os.Getenv("WEB_PORT")
+	if port == "" {
+		port = "8080"
+	}
+
+	// Initialize LLM client
+	llmClient := llm.NewClient(llmURL, model)
+
+	// Set up gin router
+	r := gin.Default()
+
+	// Load HTML templates
+	r.LoadHTMLGlob("web/templates/*")
+	r.Static("/static", "./web/static")
+
+	// Initialize handlers
+	h := handlers.NewHandler(llmClient)
+
+	// Routes
+	r.GET("/", h.Index)
+	r.POST("/evaluate", h.Evaluate)
+	r.GET("/examples", h.Examples)
+
+	log.Printf("Starting Good Telemetry web server on :%s", port)
+	log.Printf("LLM Backend: %s (model: %s)", llmURL, model)
+
+	if err := r.Run(":" + port); err != nil {
 		log.Fatal(err)
 	}
-}
-
-func handleIndex(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Good Telemetry - Coming Soon")
 }
