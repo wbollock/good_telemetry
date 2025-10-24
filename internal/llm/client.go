@@ -222,6 +222,15 @@ func (c *Client) buildPrompt(parsed *metrics.ParsedMetrics) string {
 	sb.WriteString(systemPrompt)
 	sb.WriteString("\n\n")
 
+	// TODO(RAG): Add retrieval-augmented generation here
+	// Before evaluating, search docs/ directory for:
+	// 1. Similar good metric examples from real production systems
+	// 2. Relevant Prometheus documentation sections
+	// 3. Company/team-specific metric naming conventions
+	// 4. Common patterns for this metric type (counter/gauge/histogram)
+	// Use vector embeddings to find most relevant examples and append to prompt
+	// This will give LLM concrete examples to learn from instead of generic rules
+
 	// User's metrics
 	sb.WriteString("METRICS TO EVALUATE:\n")
 	for _, m := range parsed.Metrics {
