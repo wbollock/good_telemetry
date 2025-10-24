@@ -86,19 +86,62 @@ button:hover {
     background: #2980b9;
 }
 
-.htmx-indicator {
-    display: none;
-    margin-left: 15px;
-    color: #3498db;
-    font-style: italic;
+button:disabled {
+    background: #95a5a6;
+    cursor: not-allowed;
 }
 
-.htmx-request .htmx-indicator {
-    display: inline;
+.form-actions {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.loading-indicator {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 20px;
+    background: #e8f4f8;
+    border-radius: 4px;
+    border: 2px solid #3498db;
+}
+
+.htmx-request .loading-indicator {
+    display: flex;
+}
+
+.spinner {
+    width: 20px;
+    height: 20px;
+    border: 3px solid #e8f4f8;
+    border-top: 3px solid #3498db;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-indicator span {
+    color: #2c3e50;
+    font-weight: 500;
 }
 
 .results-container {
     margin-top: 30px;
+}
+
+.results-placeholder {
+    padding: 30px;
+    text-align: center;
+    color: #7f8c8d;
+    background: #f8f9fa;
+    border: 2px dashed #ddd;
+    border-radius: 8px;
+    font-style: italic;
 }
 
 .evaluation-result {
