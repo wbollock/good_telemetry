@@ -44,6 +44,74 @@ type ollamaResponse struct {
 	Done     bool   `json:"done"`
 }
 
+// ============================================================================
+// EVALUATION PROMPT - Edit this to change how the LLM evaluates metrics
+// ============================================================================
+const systemPrompt = `You are a Prometheus metrics expert following official Prometheus best practices.
+
+OFFICIAL PROMETHEUS NAMING CONVENTIONS (https://prometheus.io/docs/practices/naming/):
+
+1. METRIC NAMING:
+   - Use snake_case (e.g., http_requests_total, not httpRequestsTotal)
+   - Names should describe WHAT is being measured, not HOW
+   - Use base units: seconds (not milliseconds), bytes (not megabytes), etc.
+   - Metric names should have a suffix describing the unit (where applicable)
+     * _total for counters (monotonically increasing values)
+     * _seconds for durations
+     * _bytes for sizes
+     * _ratio for ratios (0-1)
+     * _percent for percentages (0-100)
+   - Avoid putting the metric type in the name (no "gauge_", "counter_" prefixes)
+
+2. LABEL NAMING:
+   - Use snake_case for label names
+   - Labels are key-value pairs for dimensions of a metric
+   - EVERY unique combination of labels creates a NEW TIME SERIES
+
+3. CARDINALITY RULES (CRITICAL):
+   - High-cardinality labels create MILLIONS of time series and crash Prometheus
+   - NEVER use these as labels:
+     * user_id, email, username (unbounded, one per user)
+     * ip_address, client_ip (one per client)
+     * timestamp, epoch, unix_time, created_at (infinite values)
+     * uuid, guid, trace_id, span_id (unbounded identifiers)
+     * session_id, request_id (unbounded per request)
+     * url_path, full_path (unbounded URLs)
+     * inode, file_id (unbounded per file)
+     * volume_id, disk_id (potentially unbounded)
+   - Use ONLY bounded, low-cardinality labels:
+     * method (GET, POST, PUT, DELETE - ~10 values)
+     * status (200, 404, 500 - ~20 values)
+     * endpoint (API endpoints - should be <100)
+     * region, zone, cluster (infrastructure - bounded)
+   - Put high-cardinality data in LOGS, not metrics
+
+4. METRIC TYPES:
+   - Counter: Cumulative metric that only increases (requests_total, errors_total)
+   - Gauge: Value that can go up or down (memory_usage_bytes, queue_length)
+   - Histogram: Observations in buckets (request_duration_seconds)
+   - Summary: Like histogram but with quantiles
+
+5. COMMON ANTIPATTERNS:
+   - Storing ratios/percentages as metrics (calculate in queries instead)
+   - Using milliseconds instead of seconds for time
+   - Combining multiple unbounded labels (multiplication effect)
+   - Missing _total suffix on counters
+   - Using camelCase or UPPERCASE`
+
+const evaluationInstructions = `
+Provide your evaluation in this EXACT format:
+
+VERDICT: [Good/Needs Improvement/Poor]
+ISSUES:
+- [list specific issues, one per line]
+RECOMMENDATIONS:
+- [list specific recommendations, one per line]
+IMPROVED EXAMPLE:
+[show corrected metric with proper naming and labels]`
+
+// ============================================================================
+
 func NewClient(baseURL, model string) *Client {
 	return &Client{
 		baseURL: strings.TrimSuffix(baseURL, "/"),
@@ -116,13 +184,18 @@ func (c *Client) Evaluate(parsed *metrics.ParsedMetrics) (*Evaluation, error) {
 func (c *Client) buildPrompt(parsed *metrics.ParsedMetrics) string {
 	var sb strings.Builder
 
-	sb.WriteString("You are a Prometheus metrics expert. Evaluate the following Prometheus metric(s) for quality.\n\n")
-	sb.WriteString("METRICS:\n")
+	// System prompt with Prometheus best practices
+	sb.WriteString(systemPrompt)
+	sb.WriteString("\n\n")
+
+	// User's metrics
+	sb.WriteString("METRICS TO EVALUATE:\n")
 	for _, m := range parsed.Metrics {
 		sb.WriteString(fmt.Sprintf("%s\n", m.Raw))
 	}
 	sb.WriteString("\n")
 
+	// Cardinality analysis from our calculator
 	if parsed.CardinalityAnalysis != nil {
 		sb.WriteString("CARDINALITY ANALYSIS:\n")
 		sb.WriteString(fmt.Sprintf("Estimated Series: %d\n", parsed.CardinalityAnalysis.EstimatedSeries))
@@ -137,17 +210,8 @@ func (c *Client) buildPrompt(parsed *metrics.ParsedMetrics) string {
 		sb.WriteString("\n")
 	}
 
-	sb.WriteString("Evaluate based on:\n")
-	sb.WriteString("1. Metric naming conventions (snake_case, appropriate suffixes like _total, _bytes, _seconds)\n")
-	sb.WriteString("2. Label usage (avoid high-cardinality labels like user_id, email, timestamps)\n")
-	sb.WriteString("3. Cardinality (combination of labels should not explode)\n")
-	sb.WriteString("4. Structure and best practices\n\n")
-
-	sb.WriteString("Provide your evaluation in this format:\n")
-	sb.WriteString("VERDICT: [Good/Needs Improvement/Poor]\n")
-	sb.WriteString("ISSUES:\n- [list issues, one per line]\n")
-	sb.WriteString("RECOMMENDATIONS:\n- [list recommendations, one per line]\n")
-	sb.WriteString("IMPROVED EXAMPLE:\n[show corrected version]\n")
+	// Output format instructions
+	sb.WriteString(evaluationInstructions)
 
 	return sb.String()
 }
