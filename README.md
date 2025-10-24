@@ -28,40 +28,63 @@ Eventually will expand to support log evaluation as well.
 - Go 1.25+
 - [Ollama](https://ollama.ai) installed (local or remote)
 
-### Setup Ollama
+### Quick Test (Local Ollama)
 
-For local use:
+The fastest way to test the application:
+
+1. **Install and start Ollama**:
 ```bash
 # Install Ollama
 curl https://ollama.ai/install.sh | sh
 
-# Pull a model
-ollama pull llama2
+# Pull a small model for testing (llama3.2 is ~2GB)
+ollama pull llama3.2:3b
+
+# Start Ollama (it runs on localhost:11434 by default)
+ollama serve
 ```
 
-For remote GPU server, install Ollama there and note the URL.
-
-### Running the Web Server
-
-1. Build:
+2. **In a new terminal, build and run the web server**:
 ```bash
 go build -o bin/web ./cmd/web
-```
-
-2. Run with default settings (expects Ollama at localhost:11434):
-```bash
+export OLLAMA_MODEL=llama3.2:3b
 ./bin/web
 ```
 
-3. Or configure with environment variables:
+3. **Test it**:
+   - Open `http://localhost:8080`
+   - Paste a metric:
+   ```
+   api_response_time{user_id="12345", endpoint="/profile"} 0.234
+   ```
+   - Click "Evaluate Metrics"
+   - Watch the LLM identify the high-cardinality `user_id` label
+
+### Setup for Remote GPU Server
+
+If you want to use a separate GPU Linode:
+
+1. On the GPU server:
 ```bash
+# Install Ollama
+curl https://ollama.ai/install.sh | sh
+
+# Pull a larger model for better analysis
+ollama pull llama3.1:8b
+
+# Start Ollama and expose it
+OLLAMA_HOST=0.0.0.0:11434 ollama serve
+```
+
+2. On your web server:
+```bash
+go build -o bin/web ./cmd/web
 export LLM_BACKEND_URL=http://your-gpu-server:11434
-export OLLAMA_MODEL=llama2
-export WEB_PORT=8080
+export OLLAMA_MODEL=llama3.1:8b
 ./bin/web
 ```
 
-4. Open browser to `http://localhost:8080`
+3. Open browser to `http://localhost:8080`
 
 ## Configuration
 
