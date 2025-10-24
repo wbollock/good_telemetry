@@ -354,103 +354,112 @@ footer {
 
 /* Dark Mode */
 body.dark-mode {
-    background: #1a1a1a;
-    color: #e0e0e0;
+    background: #0d1117;
+    color: #f0f0f0;
 }
 
 body.dark-mode header,
 body.dark-mode section,
 body.dark-mode .example-card {
-    background: #2d2d2d;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    background: #1c2128;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.5);
 }
 
 body.dark-mode header h1,
-body.dark-mode h2 {
-    color: #e0e0e0;
+body.dark-mode h2,
+body.dark-mode p {
+    color: #f0f0f0;
 }
 
 body.dark-mode h2 {
-    border-bottom-color: #3498db;
+    border-bottom-color: #58a6ff;
 }
 
 body.dark-mode .subtitle,
 body.dark-mode footer {
-    color: #aaa;
+    color: #c9d1d9;
 }
 
 body.dark-mode .theme-toggle {
-    border-color: #555;
-    color: #e0e0e0;
+    border-color: #444c56;
+    color: #f0f0f0;
 }
 
 body.dark-mode .theme-toggle:hover {
-    background: #3a3a3a;
-    border-color: #3498db;
+    background: #2d333b;
+    border-color: #58a6ff;
 }
 
 body.dark-mode textarea {
-    background: #1a1a1a;
-    color: #e0e0e0;
-    border-color: #555;
+    background: #0d1117;
+    color: #f0f0f0;
+    border-color: #444c56;
+}
+
+body.dark-mode textarea::placeholder {
+    color: #8b949e;
 }
 
 body.dark-mode textarea:focus {
-    border-color: #3498db;
+    border-color: #58a6ff;
 }
 
 body.dark-mode .results-placeholder {
-    background: #1a1a1a;
-    color: #888;
-    border-color: #555;
+    background: #0d1117;
+    color: #8b949e;
+    border-color: #444c56;
 }
 
 body.dark-mode .evaluation-result {
-    background: #1a1a1a;
+    background: #0d1117;
 }
 
 body.dark-mode .loading-indicator {
-    background: #1a1a1a;
-    border-color: #3498db;
+    background: #0d1117;
+    border-color: #58a6ff;
 }
 
 body.dark-mode .loading-indicator span {
-    color: #e0e0e0;
+    color: #f0f0f0;
 }
 
 body.dark-mode .spinner {
-    border-color: #1a1a1a;
-    border-top-color: #3498db;
+    border-color: #0d1117;
+    border-top-color: #58a6ff;
 }
 
 body.dark-mode .issue {
-    background: #3a2020;
-    border-left-color: #e74c3c;
+    background: #3d1f1f;
+    border-left-color: #f85149;
+    color: #ffa198;
 }
 
 body.dark-mode .recommendation {
-    background: #1a2a35;
-    border-left-color: #3498db;
+    background: #1f3a52;
+    border-left-color: #58a6ff;
+    color: #a5d6ff;
 }
 
 body.dark-mode .raw-response summary {
-    background: #3a3a3a;
+    background: #2d333b;
+    color: #f0f0f0;
 }
 
 body.dark-mode .example-metric pre {
-    background: #1a1a1a;
-    color: #e0e0e0;
+    background: #0d1117;
+    color: #f0f0f0;
 }
 
 body.dark-mode .example-analysis {
-    background: #1a2a35;
+    background: #1f3a52;
+    color: #f0f0f0;
 }
 
 body.dark-mode .example-card {
-    border-color: #555;
+    border-color: #444c56;
 }
 
 body.dark-mode .error-result {
-    background: #3a2020;
-    color: #ffb3b3;
+    background: #3d1f1f;
+    color: #ffa198;
 }
