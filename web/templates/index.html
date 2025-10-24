@@ -45,6 +45,12 @@
                       hx-target="#results"
                       hx-indicator="#loading"
                       hx-swap="innerHTML">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <label for="metrics" style="font-weight: 500;">Paste your metrics:</label>
+                        <button type="button" id="random-metric-btn" class="secondary-button">
+                            🎲 Try Random Example
+                        </button>
+                    </div>
                     <textarea
                         name="metrics"
                         id="metrics"
@@ -109,6 +115,39 @@
                 themeIcon.textContent = '🌙';
                 localStorage.setItem('theme', 'light');
             }
+        });
+
+        // Random metric generator
+        const randomMetricBtn = document.getElementById('random-metric-btn');
+        const metricsTextarea = document.getElementById('metrics');
+
+        const exampleMetrics = [
+            // Good examples
+            'http_requests_total{method="GET", status="200", endpoint="/api/users"} 15847',
+            'node_memory_usage_bytes{instance="prod-web-01", region="us-east-1", zone="us-east-1a"} 8589934592',
+            'http_request_duration_seconds_bucket{le="0.1", method="POST", status="201"} 9543',
+            'process_cpu_seconds_total{instance="api-server-3", cluster="production"} 12847.23',
+
+            // Bad examples - high cardinality
+            'api_response_time{user_id="usr_7x8k2p", endpoint="/profile", method="GET"} 0.234',
+            'request_latency_ms{client_ip="192.168.1.42", path="/api/data"} 145',
+            'database_query_duration{query_id="q_8x7k2m", table="users", timestamp="1729783245"} 0.089',
+            'volume_attachment{vol="vol-abc123xyz", inode="1048576", cluster="prod-east"} 1',
+
+            // Bad examples - naming issues
+            'RequestCount{Method="GET", Status="200"} 500',
+            'api_latency_milliseconds{endpoint="/search", region="us-west"} 85',
+            'diskUsageMB{server="prod-1", mount="/data"} 45000',
+            'error_rate_percentage{service="auth", environment="prod"} 2.5',
+
+            // Mixed issues
+            'http_errors{user="john.doe@example.com", error_type="timeout", url="https://api.example.com/v1/users/profile/settings"} 3',
+            'cache_operations{operation="get", key="session:9x7k2m:data", hostname="cache-01.prod.internal"} 1',
+        ];
+
+        randomMetricBtn.addEventListener('click', () => {
+            const randomIndex = Math.floor(Math.random() * exampleMetrics.length);
+            metricsTextarea.value = exampleMetrics[randomIndex];
         });
     </script>
 </body>
