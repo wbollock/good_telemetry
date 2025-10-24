@@ -129,6 +129,25 @@ func getHardcodedExamples() []Example {
 			CardinalityEstimate: "N/A - antipattern",
 			MemoryEstimate:      "N/A",
 		},
+		{
+			Metrics: `volume_attachment{vol="vol-abc123", inode="1048576", timestamp="1729783200", cluster="prod-east"} 1`,
+			Verdict: "Poor",
+			Issues: []string{
+				"vol label creates series per volume (2566+ unique values)",
+				"inode label is extremely high-cardinality (529+ unique values)",
+				"timestamp as label is a cardinal sin - creates infinite series",
+				"Combines multiple unbounded labels = cardinality explosion",
+			},
+			Recommendations: []string{
+				"Remove vol label - aggregate at pool/cluster level instead",
+				"Remove inode completely - use logs for per-inode tracking",
+				"NEVER use timestamp as a label - Prometheus already timestamps samples",
+				"Keep only cluster/pool labels for aggregation",
+				"Real example: 2566 vols × 529 inodes × 1606 timestamps = 2.18 BILLION series",
+			},
+			CardinalityEstimate: "CATASTROPHIC: 2.18+ billion potential series (2566 vol × 529 inode × 1606 timestamp)",
+			MemoryEstimate:      "6.5+ TB RAM required (likely to crash Prometheus entirely)",
+		},
 	}
 }
 
