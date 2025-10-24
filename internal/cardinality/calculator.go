@@ -123,28 +123,43 @@ func Analyze(allLabels []map[string]string) *Analysis {
 
 	// Set overall estimates
 	if hasHighCardinalityRisk {
-		analysis.EstimatedSeries = 1000000 // Assume very high for unbounded
-		analysis.CardinalityLevel = "CRITICAL"
-		analysis.Warnings = append(analysis.Warnings, "Unbounded cardinality detected - could create millions of series")
+		// Can't estimate actual cardinality from limited samples
+		analysis.EstimatedSeries = 0
+		analysis.CardinalityLevel = "CRITICAL - Potentially Unbounded"
+		analysis.MemoryEstimateBytes = 0
+		analysis.MemoryEstimateHuman = "Unknown (depends on label value distribution)"
+		analysis.Warnings = append(analysis.Warnings,
+			"Cannot estimate cardinality from single sample - detected high-risk label patterns",
+			"These label types are typically unbounded and can create millions of series",
+			"Example: 1000 vols × 500 inodes × timestamps = potentially millions of series")
 	} else {
-		analysis.EstimatedSeries = totalCardinality
-		if totalCardinality < lowCardinalityThreshold {
-			analysis.CardinalityLevel = "Low"
-		} else if totalCardinality < mediumCardinalityThreshold {
-			analysis.CardinalityLevel = "Medium"
-		} else if totalCardinality < highCardinalityThreshold {
-			analysis.CardinalityLevel = "High"
-			analysis.Warnings = append(analysis.Warnings, fmt.Sprintf("High cardinality: ~%d series", totalCardinality))
+		// Can only estimate if we have multiple samples showing variety
+		numSamples := len(allLabels)
+		if numSamples == 1 {
+			analysis.EstimatedSeries = 0
+			analysis.CardinalityLevel = "Cannot Estimate (single sample)"
+			analysis.MemoryEstimateBytes = 0
+			analysis.MemoryEstimateHuman = "Unknown (need multiple samples)"
+			analysis.Warnings = append(analysis.Warnings,
+				"Cardinality estimation requires multiple samples showing label variety",
+				"Labels appear safe (no high-risk patterns detected)")
 		} else {
-			analysis.CardinalityLevel = "Very High"
-			analysis.Warnings = append(analysis.Warnings, fmt.Sprintf("Very high cardinality: ~%d series - consider reducing labels", totalCardinality))
+			analysis.EstimatedSeries = totalCardinality
+			if totalCardinality < lowCardinalityThreshold {
+				analysis.CardinalityLevel = "Low"
+			} else if totalCardinality < mediumCardinalityThreshold {
+				analysis.CardinalityLevel = "Medium"
+			} else if totalCardinality < highCardinalityThreshold {
+				analysis.CardinalityLevel = "High"
+				analysis.Warnings = append(analysis.Warnings, fmt.Sprintf("Observed: ~%d unique combinations", totalCardinality))
+			} else {
+				analysis.CardinalityLevel = "Very High"
+				analysis.Warnings = append(analysis.Warnings, fmt.Sprintf("Observed: ~%d unique combinations - consider reducing labels", totalCardinality))
+			}
+			analysis.MemoryEstimateBytes = int64(analysis.EstimatedSeries) * memoryPerSeriesBytes
+			analysis.MemoryEstimateHuman = formatBytes(analysis.MemoryEstimateBytes)
 		}
 	}
-
-	// Calculate memory based on robustperception.io formula
-	// RAM = (number of active series) × (memory per series)
-	analysis.MemoryEstimateBytes = int64(analysis.EstimatedSeries) * memoryPerSeriesBytes
-	analysis.MemoryEstimateHuman = formatBytes(analysis.MemoryEstimateBytes)
 
 	return analysis
 }
