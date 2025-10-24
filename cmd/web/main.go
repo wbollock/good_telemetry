@@ -4,8 +4,10 @@
 package main
 
 import (
+	"html/template"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/wbollock/good_telemetry/internal/handlers"
@@ -34,6 +36,11 @@ func main() {
 
 	// Set up gin router
 	r := gin.Default()
+
+	// Register custom template functions
+	r.SetFuncMap(template.FuncMap{
+		"lower": strings.ToLower,
+	})
 
 	// Load HTML templates
 	r.LoadHTMLGlob("web/templates/*")
