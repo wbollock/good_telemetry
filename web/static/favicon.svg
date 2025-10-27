@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Background circle -->
+  <circle cx="50" cy="50" r="48" fill="#3498db" stroke="#2980b9" stroke-width="2"/>
+
+  <!-- Chart/Graph icon representing telemetry -->
+  <g fill="white">
+    <!-- Bar chart representation -->
+    <rect x="20" y="55" width="10" height="20" rx="2"/>
+    <rect x="35" y="45" width="10" height="30" rx="2"/>
+    <rect x="50" y="35" width="10" height="40" rx="2"/>
+    <rect x="65" y="50" width="10" height="25" rx="2"/>
+
+    <!-- Checkmark overlay indicating "good" -->
+    <path d="M 75 30 L 82 37 L 92 22" stroke="white" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

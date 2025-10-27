@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ .title }}</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <link rel="stylesheet" href="/static/style.css">
     <script>
@@ -30,9 +31,12 @@
                     <h1>Good Telemetry</h1>
                     <p class="subtitle">Prometheus Metric Quality Evaluator</p>
                 </div>
-                <button id="dark-mode-toggle" class="theme-toggle" aria-label="Toggle dark mode">
-                    <span class="theme-icon">🌙</span>
-                </button>
+                <div class="theme-toggle-container">
+                    <button id="dark-mode-toggle" class="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">
+                        <span class="theme-icon">🌙</span>
+                    </button>
+                    <span class="theme-label">Theme</span>
+                </div>
             </div>
         </header>
 
@@ -45,18 +49,18 @@
                       hx-target="#results"
                       hx-indicator="#loading"
                       hx-swap="innerHTML">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                        <label for="metrics" style="font-weight: 500;">Paste your metrics:</label>
-                        <button type="button" id="random-metric-btn" class="secondary-button">
-                            🎲 Try Random Example
-                        </button>
-                    </div>
+                    <label for="metrics" class="metrics-label">Paste your metrics:</label>
                     <textarea
                         name="metrics"
                         id="metrics"
                         rows="10"
                         placeholder='http_requests_total{method="GET", status="200"} 1234'
                         required></textarea>
+                    <div class="textarea-helper">
+                        <button type="button" id="random-metric-btn" class="secondary-button">
+                            🎲 Try Random Example
+                        </button>
+                    </div>
 
                     <div class="form-actions">
                         <button type="submit" id="submit-btn">Evaluate Metrics</button>
